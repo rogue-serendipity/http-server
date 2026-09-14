@@ -71,7 +71,9 @@ func main() {
 
 	// Create a writer to send data back to the client
 
-	n, err := conn.Write([]byte("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nHello, World!"))
+	body := "Hello, World!"
+	response := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(body), body)
+	n, err := conn.Write([]byte(response))
 	// represents an HTTP response
 	if err != nil {
 		fmt.Println("Write error:", err)
