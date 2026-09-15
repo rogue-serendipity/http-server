@@ -80,4 +80,27 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("Sent %d bytes to the client\n", n)
+
+	// Parse Request Line
+
+	requestLine := strings.Split(string(received), "\r\n")[0]
+	// Get request line from the received data, which is the first line of the HTTP request
+	requestParts := strings.Fields(requestLine)
+	// Split the request line into its components: method, path, and version
+
+	if len(requestParts) != 3 {
+		// If the request line does not have exactly 3 parts, it is invalid
+		body := "Bad Request"
+		response := fmt.Sprintf("HTTP/1.1 400 Bad Request\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(body), body)
+		_, err := conn.Write([]byte(response))
+		if err != nil {
+			fmt.Println("Write error:", err)
+			panic(err)
+		}
+		// Send a 400 Bad Request response to the client
+		return
+	}
+
+	method, path, version := requestParts[0], requestParts[1], requestParts[2]
+	fmt.Printf("Method: %s, Path: %s, Version: %s\n", method, path, version)
 }
