@@ -69,18 +69,6 @@ func main() {
 		}
 	}
 
-	// Create a writer to send data back to the client
-
-	body := "Hello, World!"
-	response := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(body), body)
-	n, err := conn.Write([]byte(response))
-	// represents an HTTP response
-	if err != nil {
-		fmt.Println("Write error:", err)
-		panic(err)
-	}
-	fmt.Printf("Sent %d bytes to the client\n", n)
-
 	// Parse Request Line
 
 	requestLine := strings.Split(string(received), "\r\n")[0]
@@ -97,10 +85,50 @@ func main() {
 			fmt.Println("Write error:", err)
 			panic(err)
 		}
-		// Send a 400 Bad Request response to the client
 		return
+		// Send a 400 Bad Request response to the client
+
+	} else {
+		// If the request line is valid, send a 200 OK response to the client
+		body := "Hello, World!"
+		response := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(body), body)
+		n, err := conn.Write([]byte(response))
+		// represents an HTTP response
+		if err != nil {
+			fmt.Println("Write error:", err)
+			panic(err)
+		}
+		fmt.Printf("Sent %d bytes to the client\n", n)
 	}
 
 	method, path, version := requestParts[0], requestParts[1], requestParts[2]
 	fmt.Printf("Method: %s, Path: %s, Version: %s\n", method, path, version)
+
+	// Parse Headers
+
+	requestHeaders := make(map[string]string)
+	// Create a map to hold the request headers
+	for _, line := range strings.Split(string(received), "\r\n")[1:] {
+		// Loop through the lines of the request, starting from the second line to parse headers
+		if line == "" {
+			break
+		}
+		// If we reach an empty line, we have reached the end of the headers
+		headerParts := strings.SplitN(line, ":", 2)
+		// split the header line into key and value, using ": " as the delimiter
+		if len(headerParts) == 2 {
+			key := headerParts[0]
+			// Get the header key
+			value := strings.TrimSpace(headerParts[1])
+			// Clean up the header value by trimming whitespace
+			requestHeaders[key] = value
+			fmt.Printf("Header: %s: %s\n", key, value)
+		}
+		// Store the header key-value pair in the map, move to the next pair
+		if len(headerParts) != 2 {
+			fmt.Printf("Skipping malformed header line: %s\n", line)
+		}
+		// If the header line is malformed, print a message and skip it
+	}
+
 }
